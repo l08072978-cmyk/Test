@@ -18,7 +18,11 @@ const els = {
   cartItems: document.getElementById('cart-items'),
   cartTotal: document.getElementById('cart-total'),
   cartPanel: document.getElementById('cart-panel'),
+  modal: document.getElementById('product-modal'),
 };
+
+// إغلاق نافذة التفاصيل بالنقر على الخلفية
+els.modal.addEventListener('click', (e) => { if (e.target === els.modal) els.modal.classList.add('hidden'); });
 
 let state = { categoryId: null, search: '' };
 
@@ -48,19 +52,59 @@ async function loadProducts() {
     : '<p class="empty">لا توجد منتجات مطابقة.</p>';
 
   els.products.querySelectorAll('button[data-add]').forEach((btn) => {
-    btn.addEventListener('click', () => addToCart(btn.dataset.add));
+    btn.addEventListener('click', (e) => { e.stopPropagation(); addToCart(btn.dataset.add); });
+  });
+  els.products.querySelectorAll('.product-card').forEach((card) => {
+    card.addEventListener('click', () => openProduct(card.dataset.id));
   });
 }
 
+function stars(rating = { average: 0, count: 0 }) {
+  const full = Math.round(rating.average);
+  return `<span class="stars">${'★'.repeat(full)}${'☆'.repeat(5 - full)}</span>
+          <span class="rating-num">${rating.average} (${rating.count})</span>`;
+}
+
 function productCard(p) {
+  const badge = p.discountPercent > 0 ? `<span class="badge">-${p.discountPercent}%</span>` : '';
+  const old = p.oldPrice && p.oldPrice > p.price ? `<span class="old-price">${p.oldPrice}</span>` : '';
+  const tags = (p.tags || []).map((t) => `<span class="tag">${t}</span>`).join('');
+  const lowStock = p.stock <= 15 ? `<span class="low-stock">باقٍ ${p.stock} فقط</span>` : '';
   return `
-    <div class="product-card">
-      <div class="thumb">🧰</div>
+    <div class="product-card" data-id="${p.id}">
+      <div class="thumb">${badge}${p.emoji || '🧰'}</div>
+      <div class="brand">${p.brand || ''}</div>
       <h3>${p.name}</h3>
+      <div class="rating">${stars(p.rating)}</div>
+      <div class="tags">${tags}</div>
       <p class="desc">${p.description || ''}</p>
-      <div class="price">${p.price} د.إ</div>
+      <div class="price-row"><span class="price">${p.price} د.إ</span> ${old} ${lowStock}</div>
       <button data-add="${p.id}">أضف إلى السلة</button>
     </div>`;
+}
+
+async function openProduct(id) {
+  const { data: p } = await api.get(`/api/products/${id}`);
+  const specs = Object.entries(p.specifications || {})
+    .map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('');
+  const old = p.oldPrice && p.oldPrice > p.price ? `<span class="old-price">${p.oldPrice} د.إ</span>` : '';
+  document.getElementById('modal-content').innerHTML = `
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal-emoji">${p.emoji || '🧰'}</div>
+    <div class="brand">${p.brand || ''} · ${p.sku || ''}</div>
+    <h2>${p.name}</h2>
+    <div class="rating">${stars(p.rating)}</div>
+    <div class="tags">${(p.tags || []).map((t) => `<span class="tag">${t}</span>`).join('')}</div>
+    <p>${p.description || ''}</p>
+    <div class="price-row"><span class="price big">${p.price} د.إ</span> ${old}
+      ${p.discountPercent > 0 ? `<span class="badge">-${p.discountPercent}%</span>` : ''}</div>
+    <p class="stock-line">المخزون: ${p.stock} قطعة ${p.warranty ? `· 🛡️ ${p.warranty}` : ''}</p>
+    ${specs ? `<h3>المواصفات</h3><table class="specs">${specs}</table>` : ''}
+    <button class="add-modal" data-add="${p.id}">أضف إلى السلة</button>`;
+
+  els.modal.classList.remove('hidden');
+  document.getElementById('modal-close').onclick = () => els.modal.classList.add('hidden');
+  document.querySelector('.add-modal').onclick = () => { addToCart(p.id); els.modal.classList.add('hidden'); };
 }
 
 async function addToCart(productId) {

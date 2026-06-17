@@ -1,5 +1,7 @@
 # 🛒 متجر الأدوات المنزلية — نموذج أولي معياري
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/l08072978-cmyk/test/tree/claude/home-tools-store-prototype-f6quil)
+
 نموذج أولي (prototype) لمتجر إلكتروني لبيع الأدوات المنزلية، مبني بمعمارية
 **معيارية (Modular)** قابلة للتوسعة. كل ميزة مكتفية بذاتها داخل مجلد مستقل،
 ويتم اكتشافها وتحميلها تلقائيًا — فإضافة ميزة جديدة لا تتطلب تعديل النواة.
