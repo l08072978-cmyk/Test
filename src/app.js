@@ -1,4 +1,7 @@
 // تجميع التطبيق: تحميل الوحدات، توجيه الطلبات، خدمة الملفات الثابتة.
+// يُصدّر معالجًا واحدًا للطلبات يُعاد استخدامه في:
+//   - خادم Node محليًا (createApp في server.js)
+//   - دالة serverless على Vercel (api/[...path].js)
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -18,14 +21,22 @@ const MIME = {
   '.svg': 'image/svg+xml',
 };
 
-export async function createApp() {
+// نبني المعالج مرة واحدة ونعيد استخدامه (مهم لأداء البدء البارد على serverless).
+let handlerPromise;
+
+export function getHandler() {
+  if (!handlerPromise) handlerPromise = buildHandler();
+  return handlerPromise;
+}
+
+async function buildHandler() {
   const router = new Router();
   const loaded = await loadModules(router);
   console.log(`✅ تم تحميل الوحدات: ${loaded.join(', ')}`);
 
-  const server = createServer(async (req, res) => {
+  return async function handle(req, res) {
     try {
-      const url = new URL(req.url, `http://${req.headers.host}`);
+      const url = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);
       const pathname = decodeURIComponent(url.pathname);
 
       // طلبات CORS المبدئية
@@ -49,15 +60,19 @@ export async function createApp() {
       }
 
       // غير ذلك: خدمة الملفات الثابتة من مجلد public
+      // (على Vercel تُخدَم هذه الملفات أصلًا من شبكة CDN ولا تصل إلى هنا).
       return await serveStatic(pathname, res);
     } catch (err) {
       const status = err.status ?? (err instanceof HttpError ? err.status : 500);
       if (status === 500) console.error(err);
       sendJson(res, status, { error: err.message || 'خطأ داخلي في الخادم' });
     }
-  });
+  };
+}
 
-  return server;
+export async function createApp() {
+  const handler = await getHandler();
+  return createServer(handler);
 }
 
 async function serveStatic(pathname, res) {

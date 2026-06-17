@@ -1,27 +1,15 @@
-// مُحمّل الوحدات (Module Loader) — جوهر الطابع المعياري للمشروع.
-// يكتشف تلقائيًا كل مجلد داخل src/modules، ويستدعي ملف index.js فيه
-// لتسجيل مساراته وبياناته الأولية. لإضافة ميزة جديدة لاحقًا:
-// أنشئ مجلدًا جديدًا في src/modules يُصدّر register(router) — لا تعديل هنا.
+// مُحمّل الوحدات (Module Loader).
+// يمرّ على سجلّ الوحدات بالترتيب، يُعبّئ بياناتها الأولية (إن وُجدت)،
+// ثم يسجّل مساراتها في الموجّه. لإضافة وحدة: عدّل modules/registry.js فقط.
 
-import { readdir } from 'node:fs/promises';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { dirname, join } from 'node:path';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const modulesDir = join(__dirname, '..', 'modules');
+import { modules } from '../modules/registry.js';
 
 export async function loadModules(router) {
-  const entries = await readdir(modulesDir, { withFileTypes: true });
   const loaded = [];
 
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    const moduleEntry = join(modulesDir, entry.name, 'index.js');
-    const moduleUrl = pathToFileURL(moduleEntry).href;
-
-    const mod = await import(moduleUrl);
+  for (const mod of modules) {
     if (typeof mod.register !== 'function') {
-      console.warn(`⚠️  الوحدة "${entry.name}" لا تُصدّر دالة register — تم تخطّيها.`);
+      console.warn(`⚠️  الوحدة "${mod.name ?? '?'}" لا تُصدّر دالة register — تم تخطّيها.`);
       continue;
     }
 
@@ -29,7 +17,7 @@ export async function loadModules(router) {
     if (typeof mod.seed === 'function') await mod.seed();
 
     mod.register(router);
-    loaded.push(mod.name ?? entry.name);
+    loaded.push(mod.name ?? 'module');
   }
 
   return loaded;
