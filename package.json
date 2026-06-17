@@ -1,0 +1,23 @@
+{
+  "name": "home-tools-store",
+  "version": "0.1.0",
+  "description": "نموذج أولي معياري لمتجر بيع أدوات منزلية - قابل للتوسعة",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "store",
+    "ecommerce",
+    "home-tools",
+    "modular",
+    "prototype"
+  ],
+  "license": "MIT"
+}
