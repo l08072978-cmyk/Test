@@ -6,7 +6,7 @@ export const config = {
   host: process.env.HOST || '0.0.0.0',
   // اسم المتجر ومعلومات عامة تُعرض في الواجهة
   store: {
-    name: 'متجر الأدوات المنزلية',
+    name: 'متجر مريم',
     currency: 'AED',
     locale: 'ar-AE',
   },

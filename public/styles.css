@@ -61,7 +61,21 @@ body {
   color: var(--muted);
 }
 .categories li:hover, .categories li.active { background: #eef4ff; color: var(--primary); }
-#search { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; }
+#search {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  /* إزالة الظل الداخلي الافتراضي في Safari/iOS الذي يظهر كـ"ضباب داكن" */
+  -webkit-appearance: none;
+  appearance: none;
+  background: #fff;
+  color: var(--text);
+  font-size: 16px; /* يمنع تكبير الصفحة تلقائيًا عند التركيز على iOS */
+  box-shadow: none;
+}
+#search:focus { outline: none; border-color: var(--primary); }
+#search::placeholder { color: var(--muted); }
 
 .catalog { flex: 1; }
 .products-grid {

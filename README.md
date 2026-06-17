@@ -1,4 +1,4 @@
-# 🛒 متجر الأدوات المنزلية — نموذج أولي معياري
+# 🛒 متجر مريم — نموذج أولي معياري لمتجر أدوات منزلية
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/l08072978-cmyk/test/tree/claude/home-tools-store-prototype-f6quil)
 
